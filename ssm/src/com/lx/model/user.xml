@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  <!-- namespace表示的是执行 -->
+ <mapper namespace="com.lx.dao.BaseDao">
+  
+ 
+    <select id="findModuleByPid" resultType="com.lx.model.Module">
+       select m.text,m.id,m.url from module m where m.parentid=#{id}
+  </select>  
+  <select id="findModuleByUser" resultType="com.lx.model.Module">
+       select m.id,m.text from module m left join u_p up on m.id=up.pid  where up.uid=#{id} 
+  </select>
+  
+ <select id="login" resultType="com.lx.model.User" parameterType="com.lx.model.User">
+ 
+ 	select * from user where name=#{name} and pwd=#{pwd}
+ </select>
+ <select id="findData" resultType="com.lx.model.User">
+ 	select * from user
+ </select>
+ 
+ 
+ 
+ 
+    <resultMap type="com.lx.model.Module" id="h5">
+    	<id property="id" column="id"/>
+    	<result property="text" column="text"/>
+    	<collection property="children" ofType="com.lx.model.Module">
+    		<id property="id" column="s_id"/>
+    		<result property="text" column="s_text"/>
+    	</collection>
+    
+    </resultMap>
+ <select id="findModules" resultMap="h5">
+ 	 select m.id,m.text,m.parentid,s.id as s_id,s.text as s_text from module m left join module s on m.id=s.parentid
+ </select>
+  <!-- 并列模块 -->
+    <select id="findModuleByUser2" resultType="com.lx.model.Module">
+       select m.id,m.text,m.url from u_p um left join module m on um.mid=m.id where um.uid=#{id}
+    </select>
+ 
+ 
+ 
+ 
+ <select id="findData2" resultType="com.lx.model.User">
+ 
+ 	select * from user where id=#{id}
+ </select>
+ <insert id="addUser" parameterType="com.lx.model.User">
+ 	insert into user (name,roleid) values (#{name},#{roleid})
+ </insert>
+ <delete id="deleteUsers" >
+ 	delete from user where id in
+ 	<foreach collection="list" item="r" open="(" separator="," close=")">
+ 		#{r}
+ 	</foreach>
+ 
+ </delete>
+ </mapper>
+  

@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans
+	xmlns="http://www.springframework.org/schema/beans"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.1.xsd
+	http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.1.xsd
+	http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-4.1.xsd
+	">
+	 <!-- 指定注解扫描路径 -->
+   <context:component-scan base-package="com.lx"/>
+   
+	<!-- 开启springmvc注解支持 -->
+	<mvc:annotation-driven/>
+	<bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<property name="prefix" value="/"></property>
+		<property name="suffix" value=".jsp"></property>
+	</bean>
+	
+	 <!-- 创建连接池 --> 
+ 	<bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource">
+ 		<property name="driverClassName" value="com.mysql.jdbc.Driver"></property>
+ 		<property name="url" value="jdbc:mysql://localhost:3306/shiro?useUnicode=true&amp;characterEncoding=utf-8"></property>
+ 		<property name="username" value="root"></property>
+ 		<property name="password" value="liangxu"></property>
+ 	</bean>
+ 	 <bean id="jdbcrealm" class="org.apache.shiro.realm.jdbc.JdbcRealm">
+ 	 		<property name="permissionsLookupEnabled" value="true"></property>
+ 	 		<property name="dataSource" ref="dataSource"></property>
+ 	 		<property name="authenticationQuery" value=" SELECT password FROM sec_user WHERE user_name= ?"></property>
+	   		<property name="userRolesQuery" value="SELECT role_name from sec_user_role left join sec_role using(role_id) left join sec_user using(user_id) WHERE user_name= ?"></property>
+	   		<property name="permissionsQuery" value="SELECT permission_name FROM sec_role_permission left join sec_role using(role_id) left join sec_permission using(permission_id) WHERE role_name = ? "></property>
+ 	 </bean>
+ 	 <bean id="cacheManager" class="org.apache.shiro.cache.MemoryConstrainedCacheManager"></bean>
+ 	
+ 	 <bean id="securityManager" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager">
+ 	 	<property name="cacheManager" ref="cacheManager"></property>
+	  	 <property name="realm" ref="jdbcrealm"></property>
+ 	 
+ 	 </bean>
+ 	 
+ 	 
+   		<bean id="shiroFilter" class="org.apache.shiro.spring.web.ShiroFilterFactoryBean">
+	   <property name="securityManager" ref="securityManager"></property>
+	   <property name="loginUrl" value="login.jsp"></property>
+	    <property name="unauthorizedUrl" value="noqx.jsp"></property>
+	   <property name="filterChainDefinitions">
+	   <value>
+	 	 	 /index.jsp=anon
+		   /result.jsp=authc,roles[admin]
+	   </value>
+	 
+	   </property>
+	</bean>
+	<bean id="lifecycleBeanPostProcessor" class="org.apache.shiro.spring.LifecycleBeanPostProcessor"/>
+
+    <bean class="org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator" depends-on="lifecycleBeanPostProcessor">
+        <property name="proxyTargetClass" value="true" />
+    </bean>
+
+    <bean class="org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor">
+        <property name="securityManager" ref="securityManager"/>
+    </bean>
+	  <bean class="org.springframework.web.servlet.handler.SimpleMappingExceptionResolver">
+	     <property name="exceptionMappings">
+	       <props>
+	        <!-- 抛出此类异常就跳转到noqx.jsp -->
+	          <prop key="org.apache.shiro.authz.UnauthorizedException">
+	             redirect:/noqx.jsp
+	          </prop>
+	       </props>
+	     </property>
+	  </bean>
+	 
+	
+	
+</beans>
+
+
+
+
+
+
+
+
+
+
+
+
+
